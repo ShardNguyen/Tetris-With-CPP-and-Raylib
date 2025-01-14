@@ -4,6 +4,7 @@
 #include "grid.h"
 #include "blocks.cpp"
 #include "kickTable.h"
+#include "playerHandling.h"
 #include <memory>
 
 class Game {
@@ -13,10 +14,17 @@ private:
 	Block nextBlock;
 	Grid grid;
 	KickTable* kickTable;
+	PlayersHandling playerHandling;
 	double gravity;
 	double lastGravityTime;
 	double lastTouchGround;
 	double stepResetted;
+
+	// DAS and ARR behavior
+	double DASTimer;
+	double ARRTimer;
+	double SDARRTimer;
+	int directionHolding;
 
 	// This is for handling block behavior
 	Block getRandomBlock();
@@ -33,14 +41,22 @@ private:
 	void reset();
 	void resetLockDelay();
 	void resetStepReset();
-	
+	void resetDASandARR();
+	void resetSDARR();
+
 	// This is for input related game function
 	void rotateBlockCW();
 	void rotateBlockCCW();
 	void moveBlockLeft();
 	void moveBlockRight();
-	void moveBlockDown();
+	bool moveBlockDown();
 	void hardDrop();
+	void triggerSDARR();
+
+	// DAS and ARR related function
+	void ARRZeroSpecialLeft();
+	void ARRZeroSpecialRight();
+	void SDARRZeroSpecial();
 
 	// Kick related functions
 	std::vector<std::vector<int>> getActualKickTableCW(std::vector<std::vector<int>> offsetCurrent, std::vector<std::vector<int>> offsetAfter);
@@ -53,6 +69,7 @@ public:
 	int score;
 	// This is for handling inputs
 	void handleInput();
+	void triggerDASAndARR();
 	// More game-related functions
 	void triggerGravity();
 	void triggerLockDelay();

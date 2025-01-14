@@ -13,16 +13,20 @@ Game::Game()
 	blocks = refillBlocks();
 	currentBlock = getRandomBlock();
 	nextBlock = getRandomBlock();
+	playerHandling = PlayersHandling(0.1, 1.0/60.0, 1.0/60.0);
 	gameOver = false;
 	score = 0;
 	lastGravityTime = 0;
 	lastTouchGround = 0;
 	stepResetted = 0;
-	gravity = 0.1;
+	gravity = 1;
 	setKickTable(new AkiraSRSTable());
+	DASTimer = 0;
+	ARRTimer = 0;
+	SDARRTimer = 0;
+	directionHolding = 0;
 }
 
-// 
 // ----- HANDLING BLOCK BEHAVIOR (PRIVATE) -----
 
 Block Game::getRandomBlock() {
@@ -135,6 +139,16 @@ void Game::resetStepReset()
 	stepResetted = 0;
 }
 
+void Game::resetDASandARR()
+{
+	DASTimer = 0;
+	ARRTimer = 0;
+}
+
+void Game::resetSDARR() {
+	SDARRTimer = 0;
+}
+
 // ----- INPUT FUNCTIONS (PRIVATE) -----
 
 void Game::rotateBlockCCW() {
@@ -149,7 +163,7 @@ void Game::rotateBlockCCW() {
 	for (long long unsigned int i = 0; i < kickOffsetCheck.size(); i++) {
 		checkBlock.move(-kickOffsetCheck[i][1], kickOffsetCheck[i][0]);
 		if (!checkBlock.isBlockOutside(grid) && checkBlock.isFit(grid)) {
-			std::cout << "Kick valid";
+			// std::cout << "Kick valid";
 			currentBlock = checkBlock;
 			break;
 		}
@@ -174,7 +188,7 @@ void Game::rotateBlockCW() {
 	for (long long unsigned int i = 0; i < kickOffsetCheck.size(); i++) {
 		checkBlock.move(-kickOffsetCheck[i][1], kickOffsetCheck[i][0]);
 		if (!checkBlock.isBlockOutside(grid) && checkBlock.isFit(grid)) {
-			std::cout << "Kick valid";
+			// std::cout << "Kick valid";
 			currentBlock = checkBlock;
 			break;
 		}
@@ -213,12 +227,15 @@ void Game::moveBlockRight() {
 	}
 }
 
-void Game::moveBlockDown() {
+// This is bool to check for the soft drop score
+bool Game::moveBlockDown() {
 	currentBlock.move(1, 0);
 	if (isBlockOutside(currentBlock) || !blockFits(currentBlock)) {
 		currentBlock.move(-1, 0);
+		return false;
 	} else {
 		resetLockDelay();
+		return true;
 	}
 }
 
@@ -228,6 +245,50 @@ void Game::hardDrop() {
 		updateScore(0, 2);
 	}
 	lockBlock();
+}
+
+void Game::triggerSDARR() {
+	float deltaTime = GetFrameTime();
+	if (IsKeyDown(KEY_DOWN)) {
+		SDARRTimer += deltaTime;
+	}
+	if (playerHandling.reachSDARR(SDARRTimer)) {
+		while (SDARRTimer > playerHandling.getSDARR()) {
+			if (moveBlockDown()) {
+				updateScore(0, 1);
+			}
+			SDARRTimer -= playerHandling.getSDARR();
+		}
+	}
+}
+
+// ----- DAS AND ARR RELATED FUNCTIONS -----
+
+void Game::ARRZeroSpecialLeft() {
+	Block checkBlock = currentBlock;
+	while (!checkBlock.isBlockOutside(grid) && checkBlock.isFit(grid)) {
+		checkBlock.move(0, -1);
+	}
+	checkBlock.move(0, 1);
+	currentBlock = checkBlock;
+}
+
+void Game::ARRZeroSpecialRight() {
+	Block checkBlock = currentBlock;
+	while (!checkBlock.isBlockOutside(grid) && checkBlock.isFit(grid)) {
+		checkBlock.move(0, 1);
+	}
+	checkBlock.move(0, -1);
+	currentBlock = checkBlock;
+}
+
+void Game::SDARRZeroSpecial() {
+	Block checkBlock = currentBlock;
+	while (!checkBlock.isBlockOutside(grid) && checkBlock.isFit(grid)) {
+		checkBlock.move(1, 0);
+	}
+	checkBlock.move(-1, 0);
+	currentBlock = checkBlock;
 }
 
 // Kick related function
@@ -260,18 +321,30 @@ void Game::handleInput() {
 		gameOver = false;
 		reset();
 	}
+
 	switch (keyPressed) {
 		case KEY_LEFT:
 			moveBlockLeft();
+			resetDASandARR();
+			directionHolding = KEY_LEFT;
 			break;
 		
 		case KEY_RIGHT:
 			moveBlockRight();
+			resetDASandARR();
+			directionHolding = KEY_RIGHT;
 			break;
 
 		case KEY_DOWN:
-			moveBlockDown();
-			updateScore(0, 1);
+			if (playerHandling.getSDARR() == 0) {
+				SDARRZeroSpecial();
+			}
+			else {
+				resetSDARR();
+				if (moveBlockDown) {
+					updateScore(0, 1);
+				}
+			}
 			break;
 
 		case KEY_UP:
@@ -289,7 +362,16 @@ void Game::handleInput() {
 		default:
 			break;
 	}
+	
+	// Handling holding direction 
+	if (IsKeyUp(KEY_LEFT) && IsKeyUp(KEY_RIGHT)) {
+		resetDASandARR();
+	}
+	if (IsKeyDown(KEY_DOWN)) {
+		triggerSDARR();
+	}
 }
+
 
 // ----- CORE GAME FUNCTIONS (PUBLIC) -----
 
@@ -306,6 +388,51 @@ void Game::triggerLockDelay() {
 	double currentTime = GetTime();
 	if (isTouchingGround() && currentTime - lastTouchGround >= LOCK_DELAY) {
 			lockBlock();
+	}
+}
+
+void Game::triggerDASAndARR() {
+	float deltaTime = GetFrameTime();
+	// Check for DAS
+	// If DAS is reached, check for ARR
+	if (!playerHandling.reachDAS(DASTimer)) {
+		if (IsKeyDown(directionHolding)) {
+			DASTimer += deltaTime;
+		}
+	} else {
+		// Special case (ARR = 0)
+		if (playerHandling.getARR() == 0) {
+			switch (directionHolding) {
+				case KEY_LEFT:
+					ARRZeroSpecialLeft();
+					break;
+				case KEY_RIGHT:
+					ARRZeroSpecialRight();
+					break;
+				default:
+					break;
+			}
+		}
+		else {
+			if (IsKeyDown(directionHolding)) {
+				ARRTimer += deltaTime;
+			}
+			if (playerHandling.reachARR(ARRTimer)) {
+				while (ARRTimer > playerHandling.getARR()) {
+					switch (directionHolding) {
+					case KEY_LEFT:
+						moveBlockLeft();
+						break;
+					case KEY_RIGHT:
+						moveBlockRight();
+						break;
+					default:
+						break;
+					}
+					ARRTimer -= playerHandling.getARR();
+				}
+			}
+		}
 	}
 }
 

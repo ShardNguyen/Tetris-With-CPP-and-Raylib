@@ -4,7 +4,7 @@
 // Improve Lock Delay (with limited step reset): DONE
 // Implement Hard Drop: DONE
 // Implement Kick Tables: DONE (And expandable)
-// DAS and ARR
+// Implement DAS and ARR
 
 #include "C:\raylib\raylib\src\raylib.h"
 #include "game.h"
@@ -23,6 +23,7 @@ int main()
 
 		if (!game.gameOver) {
 			game.triggerGravity();
+			game.triggerDASAndARR();
 			game.triggerLockDelay();
 		}
 
