@@ -53,7 +53,7 @@ void Game::lockBlock() {
 	}
 	currentBlock = nextBlock;
 	// Check if the block is blocked out to trigger game over
-	if (!blockFits(currentBlock)) {
+	if (!currentBlock.isFit(grid)) {
 		gameOver = true;
 	}
 	nextBlock = getRandomBlock();
@@ -62,7 +62,7 @@ void Game::lockBlock() {
 	resetLockDelay();
 	resetStepReset();
 }
-
+/*
 bool Game::isBlockOutside(Block block)
 {
 	std::vector<Position> tiles = block.getCellsPositions();
@@ -84,7 +84,7 @@ bool Game::blockFits(Block block)
 	}
 	return true;
 }
-
+*/
 // ----- CORE GAME FUNCTIONS (PRIVATE) -----
 
 void Game::updateScore(int linesCleared, int moveDownPoints) {
@@ -113,7 +113,7 @@ bool Game::isTouchingGround()
 {
 	Block checkBlock = currentBlock;
 	checkBlock.move(1, 0);
-	if (isBlockOutside(checkBlock) || !blockFits(checkBlock)) {
+	if (checkBlock.isBlockOutside(grid) || !checkBlock.isFit(grid)) {
 		return true;
 	}
 	return false;
@@ -122,12 +122,16 @@ bool Game::isTouchingGround()
 // ----- RESET FUNCTIONS (PRIVATE) -----
 
 void Game::reset() {
-	grid.initialize();
+	grid.emptyBoard();
 	blocks = refillBlocks();
 	currentBlock = getRandomBlock();
 	nextBlock = getRandomBlock();
 	score = 0;
 	lastGravityTime = GetTime();
+	resetLockDelay();
+	resetStepReset();
+	resetDASandARR();
+	resetSDARR();
 }
 
 void Game::resetLockDelay() {
@@ -203,7 +207,7 @@ void Game::rotateBlockCW() {
 
 void Game::moveBlockLeft() {
 	currentBlock.move(0, -1);
-	if (isBlockOutside(currentBlock) || !blockFits(currentBlock)) {
+	if (currentBlock.isBlockOutside(grid) || !currentBlock.isFit(grid)) {
 		currentBlock.move(0, 1);
 	} else {
 		if (isTouchingGround() && stepResetted < STEP_RESET) {
@@ -216,7 +220,7 @@ void Game::moveBlockLeft() {
 
 void Game::moveBlockRight() {
 	currentBlock.move(0, 1);
-	if (isBlockOutside(currentBlock) || !blockFits(currentBlock)) {
+	if (currentBlock.isBlockOutside(grid) || !currentBlock.isFit(grid)) {
 		currentBlock.move(0, -1);
 	} else {
 		if (isTouchingGround() && stepResetted < STEP_RESET) {
@@ -226,11 +230,10 @@ void Game::moveBlockRight() {
 		}
 	}
 }
-
 // This is bool to check for the soft drop score
 bool Game::moveBlockDown() {
 	currentBlock.move(1, 0);
-	if (isBlockOutside(currentBlock) || !blockFits(currentBlock)) {
+	if (currentBlock.isBlockOutside(grid) || !currentBlock.isFit(grid)) {
 		currentBlock.move(-1, 0);
 		return false;
 	} else {
@@ -291,22 +294,7 @@ void Game::SDARRZeroSpecial() {
 	currentBlock = checkBlock;
 }
 
-// Kick related function
-std::vector<std::vector<int>> Game::getActualKickTableCW(std::vector<std::vector<int>> offsetCurrent, std::vector<std::vector<int>> offsetAfter) {
-	std::vector<std::vector<int>> actual = {};
-	for (long long unsigned int i = 0; i < offsetCurrent.size(); i++) {
-		actual.push_back({offsetCurrent[i][0] - offsetAfter[i][0], offsetCurrent[i][1] - offsetAfter[i][1]});
-	}
-	return actual;
-}
-
-std::vector<std::vector<int>> Game::getActualKickTableCCW(std::vector<std::vector<int>> offsetCurrent, std::vector<std::vector<int>> offsetAfter) {
-	std::vector<std::vector<int>> actual = {};
-	for (long long unsigned int i = 0; i < offsetCurrent.size(); i++) {
-		actual.push_back({offsetCurrent[i][0] + offsetAfter[i][0], offsetCurrent[i][1] + offsetAfter[i][1]});
-	}
-	return actual;
-}
+// ----- KICK RELATED FUNCTION -----
 
 void Game::setKickTable(KickTable* newKickTable)
 {
@@ -341,7 +329,7 @@ void Game::handleInput() {
 			}
 			else {
 				resetSDARR();
-				if (moveBlockDown) {
+				if (moveBlockDown()) {
 					updateScore(0, 1);
 				}
 			}
@@ -367,7 +355,7 @@ void Game::handleInput() {
 	if (IsKeyUp(KEY_LEFT) && IsKeyUp(KEY_RIGHT)) {
 		resetDASandARR();
 	}
-	if (IsKeyDown(KEY_DOWN)) {
+	if (playerHandling.getSDARR() != 0 && IsKeyDown(KEY_DOWN)) {
 		triggerSDARR();
 	}
 }

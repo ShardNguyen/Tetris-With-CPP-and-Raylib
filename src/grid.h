@@ -14,13 +14,15 @@ private:
 	void clearRow(int row);
 	void moveRowDown(int row, int numRows);
 public:
+	std::vector<std::vector<int>> grid;
 	Grid();
+	void initialize();
+	void emptyBoard();
+	void setSize(int newNumRows, int newNumCols);
 	bool isCellOutside(int row, int col);
 	bool isCellEmpty(int row, int col);
-	void initialize();
-	void print();
 	int clearFullRows();
-	int grid[20][10];
+	void print();
 	void draw();
 };
 

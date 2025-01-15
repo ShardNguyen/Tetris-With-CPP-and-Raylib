@@ -30,8 +30,8 @@ private:
 	Block getRandomBlock();
 	std::vector<Block> refillBlocks();
 	void lockBlock();
-	bool isBlockOutside(Block block);
-	bool blockFits(Block block);
+	// bool isBlockOutside(Block block);
+	// bool blockFits(Block block);
 
 	// Core game function
 	void updateScore(int linesCleared, int moveDownPoints);
@@ -59,8 +59,6 @@ private:
 	void SDARRZeroSpecial();
 
 	// Kick related functions
-	std::vector<std::vector<int>> getActualKickTableCW(std::vector<std::vector<int>> offsetCurrent, std::vector<std::vector<int>> offsetAfter);
-	std::vector<std::vector<int>> getActualKickTableCCW(std::vector<std::vector<int>> offsetCurrent, std::vector<std::vector<int>> offsetAfter);
 	void setKickTable(KickTable* newKickTable);
 
 public:
@@ -69,8 +67,8 @@ public:
 	int score;
 	// This is for handling inputs
 	void handleInput();
-	void triggerDASAndARR();
 	// More game-related functions
+	void triggerDASAndARR();
 	void triggerGravity();
 	void triggerLockDelay();
 	// Draw function

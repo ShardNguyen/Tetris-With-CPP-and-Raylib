@@ -3,39 +3,6 @@
 #include "color.h"
 #include "graphicConfig.h"
 
-Grid::Grid()
-{
-	numRows = 20;
-	numCols = 10;
-	cellSize = 30;
-	initialize();
-	colors = getCellColors();
-}
-
-void Grid::initialize() {
-	for (int row = 0; row < numRows; row++) {
-		for (int col = 0; col < numCols; col++) {
-			grid[row][col] = 0;
-		}
-	}
-}
-
-bool Grid::isCellOutside(int row, int col)
-{
-	if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
-		return false;
-	} else {
-		return true;
-	}
-}
-
-bool Grid::isCellEmpty(int row, int col)
-{
-	if (grid[row][col] == 0) {
-		return true;
-	}
-	return false;
-}
 
 bool Grid::isRowFull(int row)
 {
@@ -62,13 +29,55 @@ void Grid::moveRowDown(int row, int numRows)
 	}
 }
 
-void Grid::print() {
+Grid::Grid()
+{
+	numRows = 20;
+	numCols = 10;
+	cellSize = 30;
+	initialize();
+	colors = getCellColors();
+}
+
+void Grid::initialize() {
+	grid.clear();
+	for (int row = 0; row < numRows; row++) {
+		std::vector<int> rowValue = {};
+		for (int col = 0; col < numCols; col++) {
+			rowValue.push_back(0);
+		}
+		grid.push_back(rowValue);
+	}
+}
+
+void Grid::emptyBoard() {
 	for (int row = 0; row < numRows; row++) {
 		for (int col = 0; col < numCols; col++) {
-			std::cout << grid[row][col] << " ";
+			grid[row][col] = 0;
 		}
-		std::cout << "\n";
 	}
+}
+
+void Grid::setSize(int newNumRows, int newNumCols)
+{
+	numRows = newNumRows;
+	numCols = newNumCols;
+}
+
+bool Grid::isCellOutside(int row, int col)
+{
+	if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+bool Grid::isCellEmpty(int row, int col)
+{
+	if (grid[row][col] == 0) {
+		return true;
+	}
+	return false;
 }
 
 int Grid::clearFullRows()
@@ -83,6 +92,15 @@ int Grid::clearFullRows()
 		}
 	}
 	return completed;
+}
+
+void Grid::print() {
+	for (int row = 0; row < numRows; row++) {
+		for (int col = 0; col < numCols; col++) {
+			std::cout << grid[row][col] << " ";
+		}
+		std::cout << "\n";
+	}
 }
 
 void Grid::draw() {
