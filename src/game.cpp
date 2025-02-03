@@ -13,7 +13,7 @@ Game::Game()
 	blocks = refillBlocks();
 	currentBlock = getRandomBlock();
 	nextBlock = getRandomBlock();
-	playerHandling = PlayersHandling(0.1, 1.0/60.0, 1.0/60.0);
+	playerHandling = PlayersHandling(0.1, 0.0/60.0, 0.0/60.0);
 	gameOver = false;
 	score = 0;
 	lastGravityTime = 0;
@@ -292,6 +292,7 @@ void Game::SDARRZeroSpecial() {
 	}
 	checkBlock.move(-1, 0);
 	currentBlock = checkBlock;
+	resetLockDelay();
 }
 
 // ----- KICK RELATED FUNCTION -----
@@ -375,7 +376,7 @@ void Game::triggerGravity()
 void Game::triggerLockDelay() {
 	double currentTime = GetTime();
 	if (isTouchingGround() && currentTime - lastTouchGround >= LOCK_DELAY) {
-			lockBlock();
+		lockBlock();
 	}
 }
 
