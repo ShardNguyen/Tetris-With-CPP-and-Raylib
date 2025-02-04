@@ -4,7 +4,7 @@
 // Improve Lock Delay (with limited step reset): DONE
 // Implement Hard Drop: DONE
 // Implement Kick Tables: DONE (And expandable)
-// Implement DAS and ARR: Nearly DONE (Need to fix ARR 0 and SDARR 0)
+// Implement DAS and ARR: DONE
 
 #include "C:\raylib\raylib\src\raylib.h"
 #include "game.h"

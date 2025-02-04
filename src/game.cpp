@@ -287,12 +287,14 @@ void Game::ARRZeroSpecialRight() {
 
 void Game::SDARRZeroSpecial() {
 	Block checkBlock = currentBlock;
+	checkBlock.move(1, 0);
 	while (!checkBlock.isBlockOutside(grid) && checkBlock.isFit(grid)) {
+		updateScore(0, 2);
+		resetLockDelay();
 		checkBlock.move(1, 0);
 	}
 	checkBlock.move(-1, 0);
 	currentBlock = checkBlock;
-	resetLockDelay();
 }
 
 // ----- KICK RELATED FUNCTION -----
