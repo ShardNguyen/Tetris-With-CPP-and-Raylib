@@ -5,6 +5,7 @@
 #include <random>
 #include <vector>
 
+std::vector<Block> full_block_bag = {LBlock(), JBlock(), IBlock(), OBlock(), SBlock(), TBlock(), ZBlock()};
 
 // ----- INITIALIZATION -----
 Game::Game()
@@ -13,6 +14,8 @@ Game::Game()
 	blocks = refillBlocks();
 	currentBlock = getRandomBlock();
 	nextBlock = getRandomBlock();
+	holdBlock = Block();
+	blockHeld = false;
 	playerHandling = PlayersHandling(0.1, 0.0/60.0, 0.0/60.0);
 	gameOver = false;
 	score = 0;
@@ -43,7 +46,7 @@ Block Game::getRandomBlock() {
 }
 
 std::vector<Block> Game::refillBlocks() {
-	return {LBlock(), JBlock(), IBlock(), OBlock(), SBlock(), TBlock(), ZBlock()};
+	return full_block_bag;
 }
 
 void Game::lockBlock() {
@@ -61,7 +64,28 @@ void Game::lockBlock() {
 	updateScore(rowsCleared, 0);
 	resetLockDelay();
 	resetStepReset();
+	resetHoldState();
 }
+
+void Game::holdBlockFunc() {
+	if (!blockHeld) {
+		if (holdBlock.id == 0) {
+			holdBlock = currentBlock;
+			resetBlockState(holdBlock);
+			currentBlock = nextBlock;
+			nextBlock = getRandomBlock();
+		} else {
+			Block tempBlock = currentBlock;
+			currentBlock = holdBlock;
+			holdBlock = tempBlock;
+			resetBlockState(holdBlock);
+		}
+		resetLockDelay();
+		resetStepReset();
+		blockHeld = true;
+	}
+}
+
 /*
 bool Game::isBlockOutside(Block block)
 {
@@ -126,12 +150,14 @@ void Game::reset() {
 	blocks = refillBlocks();
 	currentBlock = getRandomBlock();
 	nextBlock = getRandomBlock();
+	holdBlock = Block();
 	score = 0;
 	lastGravityTime = GetTime();
 	resetLockDelay();
 	resetStepReset();
 	resetDASandARR();
 	resetSDARR();
+	resetHoldState();
 }
 
 void Game::resetLockDelay() {
@@ -153,6 +179,13 @@ void Game::resetSDARR() {
 	SDARRTimer = 0;
 }
 
+void Game::resetHoldState() {
+	blockHeld = false;
+}
+
+void Game::resetBlockState(Block& block) {
+	block.reset();
+}
 // ----- INPUT FUNCTIONS (PRIVATE) -----
 
 void Game::rotateBlockCCW() {
@@ -289,7 +322,7 @@ void Game::SDARRZeroSpecial() {
 	Block checkBlock = currentBlock;
 	checkBlock.move(1, 0);
 	while (!checkBlock.isBlockOutside(grid) && checkBlock.isFit(grid)) {
-		updateScore(0, 2);
+		updateScore(0, 1);
 		resetLockDelay();
 		checkBlock.move(1, 0);
 	}
@@ -349,7 +382,11 @@ void Game::handleInput() {
 		case KEY_SPACE:
 			hardDrop();
 			break;
-			
+		
+		case KEY_C:
+			holdBlockFunc();
+			break;
+
 		default:
 			break;
 	}
@@ -434,13 +471,24 @@ void Game::draw() {
 	currentBlock.draw(LEFT_OFFSET, UP_OFFSET);
 	switch (nextBlock.id) {
 		case 3:
-			nextBlock.draw(255, 290);
+			nextBlock.draw(255, NEXT_BOX_Y + 80);
 			break;
 		case 4:
-			nextBlock.draw(255, 280);
+			nextBlock.draw(255, NEXT_BOX_Y + 70);
 			break;
 		default:
-			nextBlock.draw(270, 270);
+			nextBlock.draw(270, NEXT_BOX_Y + 60);
+			break;
+	}
+	switch (holdBlock.id) {
+		case 3:
+			holdBlock.draw(255, NEXT_BOX_Y + 285);
+			break;
+		case 4:
+			holdBlock.draw(255, NEXT_BOX_Y + 275);
+			break;
+		default:
+			holdBlock.draw(270, NEXT_BOX_Y + 265);
 			break;
 	}
 }

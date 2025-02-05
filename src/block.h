@@ -22,6 +22,7 @@ public:
 	Block();
 	void draw(int offsetX, int offsetY);
 	void move(int rows, int cols);
+	void reset();
 	std::vector<Position> getCellsPositions();
 	void rotateCW();
 	void rotateCCW();

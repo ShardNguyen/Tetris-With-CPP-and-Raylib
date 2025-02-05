@@ -12,9 +12,13 @@ private:
 	std::vector<Block> blocks;
 	Block currentBlock;
 	Block nextBlock;
+	Block holdBlock;
+	bool blockHeld;
+
 	Grid grid;
 	KickTable* kickTable;
 	PlayersHandling playerHandling;
+	
 	double gravity;
 	double lastGravityTime;
 	double lastTouchGround;
@@ -30,6 +34,7 @@ private:
 	Block getRandomBlock();
 	std::vector<Block> refillBlocks();
 	void lockBlock();
+	void holdBlockFunc();
 	// bool isBlockOutside(Block block);
 	// bool blockFits(Block block);
 
@@ -43,6 +48,8 @@ private:
 	void resetStepReset();
 	void resetDASandARR();
 	void resetSDARR();
+	void resetHoldState();
+	void resetBlockState(Block& block);
 
 	// This is for input related game function
 	void rotateBlockCW();
